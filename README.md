@@ -1,119 +1,496 @@
-# 🔗 UrlShortener: Real-Time URL Shortening and Analytics Platform
+# URL Shortener
 
-**UrlShortener** is a powerful, modern URL shortening service that allows users to instantly generate short links, securely manage them, and track comprehensive real-time analytics. Built with a robust Spring Boot backend and a responsive React frontend, UrlShortener is designed to be fast, scalable, and user-friendly.
+A full-stack URL management platform built with **Spring Boot and React** that allows users to shorten long URLs, securely manage their links, and analyze link usage through detailed click analytics.
 
-## 📚 Table of Contents
+The application focuses on **secure authentication, RESTful API design, relational data management, containerization, and scalable application architecture**.
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Getting Started](#getting-started)
-- [Screenshots](#screenshots)
-- [Contributions](#contribution)
-- [License](#license)
-- [Author](#author)
+## Features
 
-## Overview
+* **🔗 URL Shortening** — Generate short, shareable URLs from long links.
+* **📊 Analytics Dashboard** — View total click counts and link-level usage analytics.
+* **👤 User Tracking** — Associate link interactions with authenticated users.
+* **🔐 Authentication & Authorization** — Secure user registration and login using JWT and Spring Security.
+* **🗂️ Link Management** — Create, view, manage, and track personal shortened URLs.
+* **⚡ RESTful API** — Backend APIs designed for clean and efficient client-server communication.
+* **🎨 Modern Frontend** — Responsive single-page application built with React.
+* **🐳 Containerized Development** — Docker and Docker Compose support for consistent environments.
+* **📈 Monitoring Ready** — Application architecture supports integration with monitoring and observability tools.
 
-UrlShortener provides a complete solution for link management. Beyond just shortening long URLs, it offers detailed, real-time insights into link usage, including the total number of clicks and individual user interactions. The platform ensures a personalized and secure experience through full user authentication and a modern, fast user interface.
-
-## Key Features
-
-- **✅ Shorten Links:** Instantly generate concise, shareable short URLs for any long link.
-- **📈 Analytics Dashboard:** Access a powerful dashboard to track the performance of every link, showing the total number of clicks.
-- **👤 User Tracking:** Monitor granular link usage, tracking individual clicks associated with authenticated users.
-- **🔒 User Authentication:** Secure login and signup functionality powered by JWT for a personalized and private link management experience.
-- **✨ Modern UI:** A smooth, reactive frontend built with ReactJS for an excellent user experience.
-- **🚀 Fast & Scalable:** A robust and efficient backend powered by Spring Boot ensures high performance and scalability.
+---
 
 ## Tech Stack
 
-UrlShortener is a full-stack application leveraging modern, industry-standard technologies:
+### Backend
 
-### Backend (API)
+| Technology          | Purpose                                    |
+| ------------------- | ------------------------------------------ |
+| **Java 17+**        | Primary backend programming language       |
+| **Spring Boot**     | REST API and application framework         |
+| **Spring Security** | Authentication and authorization           |
+| **JWT**             | Stateless authentication                   |
+| **Spring Data JPA** | Database interaction and persistence       |
+| **Maven**           | Dependency management and build automation |
 
-| Technology             | Purpose                                                                                        |
-| :--------------------- | :--------------------------------------------------------------------------------------------- |
-| **Spring Boot**        | Core framework for the RESTful API, providing speed and stability.                             |
-| **Spring Security**    | Handling authorization, user authentication, and securing endpoints.                           |
-| **JWT Authentication** | Secure, stateless authentication for API communication.                                        |
-| **MySQL/PostgreSQL**   | Relational database for persistence of short links, long URLs, user data, and click analytics. |
+### Database
 
-### Frontend (UI)
+| Technology             | Purpose                     |
+| ---------------------- | --------------------------- |
+| **PostgreSQL / MySQL** | Relational data persistence |
+| **JPA / Hibernate**    | Object-relational mapping   |
 
-| Technology       | Purpose                                                                          |
-| :--------------- | :------------------------------------------------------------------------------- |
-| **ReactJS**      | Library for building the responsive and dynamic Single Page Application (SPA).   |
-| **React Router** | Managing client-side routing and navigation within the application.              |
-| **Axios**        | Efficient, promise-based HTTP client for communicating with the Spring Boot API. |
+The database stores information related to:
 
-### DevOps
+* Users
+* Short URLs
+* Original URLs
+* Link ownership
+* Click analytics
+* User interactions
 
-| Technology                      | Purpose                                                                                                                                     |
-| :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Docker**                      | Containerization platform to package applications with all dependencies, ensuring consistency across environments.                          |
-| **Docker Compose**              | Tool for defining and managing multi-container Docker applications using a single configuration file.                                       |
-| **Kubernetes (K8s)**            | Container orchestration platform for automated deployment, scaling, and management of containerized applications.                           |
-| **Jenkins**                     | Continuous Integration and Continuous Deployment (CI/CD) automation server for building, testing, and deploying applications.               |
-| **Terraform**                   | Infrastructure as Code (IaC) tool for provisioning and managing cloud resources in a consistent and automated way.                          |
-| **Ansible**                     | Configuration management and automation tool for provisioning servers and deploying applications efficiently.                               |
-| **Prometheus**                  | Monitoring and alerting toolkit designed for collecting and querying time-series metrics from applications and infrastructure.              |
-| **Grafana**                     | Visualization and analytics platform used to create dashboards and monitor metrics collected by Prometheus and other sources.               |
-| **Google Cloud Platform (GCP)** | Cloud service provider used for hosting, scaling, and managing applications and infrastructure.                                             |
-| **Render**                      | Cloud platform for hosting and deploying web applications and services with automated builds and scalability.                               |
-| **Vercel**                      | Frontend deployment platform optimized for React and other JavaScript frameworks, enabling fast global delivery and easy CI/CD integration. |
+### Frontend
+
+| Technology       | Purpose                |
+| ---------------- | ---------------------- |
+| **ReactJS**      | Frontend application   |
+| **React Router** | Client-side routing    |
+| **Axios**        | REST API communication |
+
+### DevOps & Infrastructure
+
+| Technology         | Purpose                                 |
+| ------------------ | --------------------------------------- |
+| **Docker**         | Application containerization            |
+| **Docker Compose** | Multi-container local environments      |
+| **Kubernetes**     | Container orchestration                 |
+| **Jenkins**        | CI/CD automation                        |
+| **Terraform**      | Infrastructure as Code                  |
+| **Ansible**        | Configuration and deployment automation |
+| **Prometheus**     | Metrics collection                      |
+| **Grafana**        | Monitoring and visualization            |
+| **GCP**            | Cloud infrastructure                    |
+
+> **Note:** Some infrastructure and cloud components are part of the project's deployment architecture and may require additional configuration before production deployment.
+
+---
+
+## System Architecture
+
+```text
+                    ┌─────────────────────┐
+                    │       React UI      │
+                    │   React + Axios     │
+                    └──────────┬──────────┘
+                               │
+                               │ HTTP / REST
+                               ▼
+                    ┌─────────────────────┐
+                    │    Spring Boot API  │
+                    │                     │
+                    │  REST Controllers   │
+                    │  Service Layer      │
+                    │  Security Layer     │
+                    └──────────┬──────────┘
+                               │
+                  ┌────────────┴────────────┐
+                  │                         │
+                  ▼                         ▼
+        ┌─────────────────┐       ┌─────────────────┐
+        │ Spring Security │       │  Spring Data JPA│
+        │      + JWT      │       │   + Hibernate   │
+        └─────────────────┘       └────────┬────────┘
+                                           │
+                                           ▼
+                                  ┌─────────────────┐
+                                  │ PostgreSQL/MySQL │
+                                  └─────────────────┘
+```
+
+---
+
+## Authentication Flow
+
+The application uses **JWT-based stateless authentication**.
+
+```text
+User
+ │
+ │ Login
+ ▼
+Spring Boot API
+ │
+ │ Validate credentials
+ ▼
+Spring Security
+ │
+ │ Generate JWT
+ ▼
+Client
+ │
+ │ Authorization: Bearer <JWT>
+ ▼
+Protected API
+ │
+ │ Validate token
+ ▼
+Authorized Request
+```
+
+This allows protected resources to be accessed without maintaining traditional server-side sessions.
+
+---
+
+## URL Shortening Flow
+
+```text
+User submits long URL
+          │
+          ▼
+    Backend validates
+          │
+          ▼
+ Generate unique short code
+          │
+          ▼
+ Store URL + owner
+          │
+          ▼
+ Return shortened URL
+          │
+          ▼
+ User opens short URL
+          │
+          ▼
+ Record click analytics
+          │
+          ▼
+ Redirect to original URL
+```
+
+---
+
+## Analytics
+
+The application tracks link usage and provides analytics for authenticated users.
+
+Tracked information can include:
+
+* Total number of clicks
+* Link-specific usage
+* Authenticated user interactions
+* Timestamp-based activity
+
+This allows users to understand how their shortened links are being used.
+
+---
+
+## Project Structure
+
+```text
+UrlShortner/
+│
+├── backend/
+│   ├── src/
+│   │   ├── main/
+│   │   │   ├── java/
+│   │   │   └── resources/
+│   │   └── test/
+│   ├── pom.xml
+│   └── Dockerfile
+│
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── Dockerfile
+│
+├── docker-compose.yml
+└── README.md
+```
+
+---
 
 ## Getting Started
 
-Follow these steps to set up and run UrlShortener locally.
-
 ### Prerequisites
 
-- Java Development Kit (JDK 17 or newer)
-- Node.js and npm (or yarn)
-- A running instance of MySQL or PostgreSQL database.
-- Maven (for Spring Boot build)
+Make sure the following are installed:
 
-### 1\. Database Setup
+* **JDK 17 or newer**
+* **Node.js**
+* **npm**
+* **Maven**
+* **PostgreSQL or MySQL**
+* **Docker** *(optional for containerized setup)*
 
-1. Update the database connection properties in the backend's `application.properties` file with your credentials:
-   ```yaml
-   spring.datasource.url: jdbc:postgresql://localhost:5432/urlshortener_db
-   spring.datasource.username: your_db_user
-   spring.datasource.password: your_db_password
-   ```
+---
 
-### 2\. Backend Setup
+## 1. Clone the Repository
 
-1. Navigate to the `backend` directory (or equivalent).
-2. Build the project using Maven:
-   ```bash
-   mvn clean install
-   ```
-3. Run the application:
-   ```bash
-   java -jar target/urlshortener-backend-*.jar
-   # OR if using an IDE like IntelliJ, run the main application class.
-   ```
-   The API should start running on `http://localhost:9090`.
+```bash
+git clone https://github.com/srisaisrinivashpanda/UrlShortner.git
 
-### 3\. Frontend Setup
+cd UrlShortner
+```
 
-1. Navigate to the `frontend` directory (or equivalent).
-2. Install the dependencies:
-   ```bash
-   npm install
-   ```
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-   The React application should open in your browser at `http://localhost:5173` (or the configured port).
+---
 
-## Screenshots
+## 2. Database Configuration
 
-![alt text](Images/Login.png)  
- ![alt text](Images/Home.png)  
- ![alt text](Images/About.png)  
- ![alt text](Images/Create_Short_URL.png)  
- ![alt text](Images/Dashboard.png)
+Create a PostgreSQL or MySQL database.
+
+Configure the backend database connection in:
+
+```text
+backend/src/main/resources/application.properties
+```
+
+Example PostgreSQL configuration:
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/urlshortener_db
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+
+spring.jpa.hibernate.ddl-auto=update
+```
+
+Do not commit real database credentials or secrets to GitHub.
+
+---
+
+## 3. Run the Backend
+
+Navigate to the backend:
+
+```bash
+cd backend
+```
+
+Build the application:
+
+```bash
+mvn clean install
+```
+
+Run the application:
+
+```bash
+mvn spring-boot:run
+```
+
+The backend will be available at:
+
+```text
+http://localhost:9090
+```
+
+---
+
+## 4. Run the Frontend
+
+Open another terminal:
+
+```bash
+cd frontend
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+The frontend will typically be available at:
+
+```text
+http://localhost:5173
+```
+
+---
+
+## 5. Docker Setup
+
+Build and start the application using Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+To stop the containers:
+
+```bash
+docker compose down
+```
+
+---
+
+## Environment Variables
+
+For local development, sensitive configuration should be provided through environment variables rather than committed to the repository.
+
+Example:
+
+```env
+DB_URL=jdbc:postgresql://localhost:5432/urlshortener_db
+DB_USERNAME=your_username
+DB_PASSWORD=your_password
+
+JWT_SECRET=your_secret_key
+```
+
+> Never commit production credentials, private keys, JWT secrets, or database passwords to the repository.
+
+---
+
+## API Overview
+
+The backend exposes RESTful APIs for authentication, URL management, and analytics.
+
+Example endpoint structure:
+
+```text
+/api/auth/*
+/api/users/*
+/api/urls/*
+/api/analytics/*
+```
+
+### Example Operations
+
+```http
+POST   /api/auth/register
+POST   /api/auth/login
+
+POST   /api/urls
+GET    /api/urls
+GET    /api/urls/{id}
+DELETE /api/urls/{id}
+
+GET    /api/analytics/{id}
+```
+
+> Exact endpoints may vary depending on the current implementation.
+
+---
+
+## Security
+
+Security is an important part of the application.
+
+Implemented security mechanisms include:
+
+* JWT-based authentication
+* Spring Security
+* Role/resource-based authorization
+* Protected API endpoints
+* Secure password handling
+* Stateless authentication
+* Input validation
+* Environment-based secret management
+
+Security configuration should be reviewed and hardened further before production deployment.
+
+---
+
+## Scalability & Reliability
+
+The project is structured to support future scaling through:
+
+* Stateless JWT authentication
+* RESTful API architecture
+* Containerization
+* Database-backed persistence
+* Kubernetes-based orchestration
+* CI/CD automation
+* Application monitoring
+* Infrastructure as Code
+
+Potential future improvements include:
+
+* Redis-based caching
+* Distributed rate limiting
+* Message queues for analytics processing
+* Database indexing optimization
+* Horizontal API scaling
+* Centralized logging
+* Automated integration testing
+* Production-grade observability
+
+---
+
+## Monitoring
+
+The planned monitoring stack includes:
+
+```text
+Application
+     │
+     ▼
+Prometheus
+     │
+     ▼
+   Metrics
+     │
+     ▼
+ Grafana
+     │
+     ▼
+Dashboards
+```
+
+This architecture can be used to monitor:
+
+* Application health
+* API performance
+* Request rates
+* Error rates
+* Resource utilization
+* Infrastructure metrics
+
+---
+
+## CI/CD
+
+The project can be integrated with Jenkins to automate:
+
+```text
+Git Push
+   │
+   ▼
+Build
+   │
+   ▼
+Run Tests
+   │
+   ▼
+Build Docker Image
+   │
+   ▼
+Deploy
+```
+
+Infrastructure automation can be managed using **Terraform and Ansible**, while Kubernetes can be used for container orchestration.
+
+---
+
+## Future Improvements
+
+* [ ] Redis caching
+* [ ] Advanced click analytics
+* [ ] QR code generation
+* [ ] Custom domains
+* [ ] Link expiration automation
+* [ ] Distributed rate limiting
+* [ ] Message queue for asynchronous analytics
+* [ ] Automated CI/CD pipeline
+* [ ] Kubernetes production deployment
+* [ ] Enhanced observability
+* [ ] Comprehensive automated testing
+
+---
