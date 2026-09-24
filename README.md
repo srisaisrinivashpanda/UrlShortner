@@ -21,55 +21,42 @@ The application focuses on **secure authentication, RESTful API design, relation
 ## Tech Stack
 
 ### Backend
-
-| Technology          | Purpose                                    |
-| ------------------- | ------------------------------------------ |
-| **Java 17+**        | Primary backend programming language       |
-| **Spring Boot**     | REST API and application framework         |
-| **Spring Security** | Authentication and authorization           |
-| **JWT**             | Stateless authentication                   |
-| **Spring Data JPA** | Database interaction and persistence       |
-| **Maven**           | Dependency management and build automation |
+| Technology | Purpose | Version / Details |
+|---|---|---|
+| **Java** | Backend programming language | Java 21 |
+| **Spring Boot** | REST API & web framework | 3.4.1 |
+| **Spring Security** | Authentication, authorization & filter chain | Stateless security with BCrypt hashing |
+| **JSON Web Tokens (JJWT)** | Stateless authentication tokens | `io.jsonwebtoken:jjwt` 0.12.6 |
+| **Spring Data JPA & Hibernate** | Object-relational mapping & database persistence | Automatic schema management & repositories |
+| **Spring Boot Actuator & Micrometer** | Health metrics & Prometheus observability | `micrometer-registry-prometheus` |
+| **Lombok** | Boilerplate reduction (getters, setters, constructors) | 1.18.28 |
+| **Maven & Maven Wrapper** | Build automation & dependency management | Included `mvnw` & `mvnw.cmd` |
 
 ### Database
-
-| Technology             | Purpose                     |
-| ---------------------- | --------------------------- |
-| **PostgreSQL / MySQL** | Relational data persistence |
-| **JPA / Hibernate**    | Object-relational mapping   |
-
-The database stores information related to:
-
-* Users
-* Short URLs
-* Original URLs
-* Link ownership
-* Click analytics
-* User interactions
+| Technology | Purpose | Configuration |
+|---|---|---|
+| **PostgreSQL** | Cloud relational database persistence | Render-hosted PostgreSQL configuration |
+| **MySQL 8.0** | Local/containerized relational database | Docker Compose pre-configured on port 3307 |
+| **JPA / Hibernate** | Schema generation & query execution | `ddl-auto=update` |
 
 ### Frontend
-
-| Technology       | Purpose                |
-| ---------------- | ---------------------- |
-| **ReactJS**      | Frontend application   |
-| **React Router** | Client-side routing    |
-| **Axios**        | REST API communication |
+| Technology | Purpose | Version / Details |
+|---|---|---|
+| **React** | Single-page application library | 18.3.1 |
+| **Vite** | Build tool and dev server | 6.2.1 |
+| **Tailwind CSS** | Utility-first CSS styling | 3.4.17 |
+| **Material UI (@mui/material)** | UI components and icons | 6.3.1 |
+| **React Query (@tanstack/react-query)** | Server state management & caching | 3.39.3 |
+| **Chart.js & React-Chartjs-2** | Click analytics visualization & bar charts | 4.4.7 / 5.3.0 |
+| **React Router DOM** | Client-side routing & subdomain support | 7.1.1 |
+| **React Hook Form** | Form handling & input validation | 7.54.2 |
+| **Axios** | HTTP client for REST API communication | 1.7.9 |
+| **Vanta.js & Three.js** | Interactive background visual effects | Three 0.180.0 / Vanta 0.5.24 |
+| **React Hot Toast & Toastify** | User feedback notifications | Toast notifications |
 
 ### DevOps & Infrastructure
-
-| Technology         | Purpose                                 |
-| ------------------ | --------------------------------------- |
-| **Docker**         | Application containerization            |
-| **Docker Compose** | Multi-container local environments      |
-| **Kubernetes**     | Container orchestration                 |
-| **Jenkins**        | CI/CD automation                        |
-| **Terraform**      | Infrastructure as Code                  |
-| **Ansible**        | Configuration and deployment automation |
-| **Prometheus**     | Metrics collection                      |
-| **Grafana**        | Monitoring and visualization            |
-| **GCP**            | Cloud infrastructure                    |
-
-> **Note:** Some infrastructure and cloud components are part of the project's deployment architecture and may require additional configuration before production deployment.
+* **Containerization (Implemented)**: Dockerfiles for backend multi-stage build (`eclipse-temurin:21-jdk` / `23-jre`) and frontend (`node:18-alpine` with `serve` or Vite dev mode), plus multi-container `docker-compose.yaml` (MySQL 8.0 + Spring Boot).
+* **Cloud & CI/CD (Architecture / Deployment)**: Deployed backend on Render, frontend on Vercel, with architectural readiness for Prometheus/Grafana metrics, Jenkins CI/CD, and Kubernetes orchestration.
 
 ---
 
@@ -186,25 +173,50 @@ This allows users to understand how their shortened links are being used.
 ## Project Structure
 
 ```text
-UrlShortner/
+URLShortener-main/
 │
-├── backend/
+├── Url-Shortner-sb/                      # Backend (Spring Boot 3.4.1, Java 21)
 │   ├── src/
 │   │   ├── main/
-│   │   │   ├── java/
+│   │   │   ├── java/com/url/shortner/
+│   │   │   │   ├── controllers/         # Auth, Redirect, Health, UrlMapping
+│   │   │   │   ├── dtos/                # Login, Register, UrlMapping, ClickEvent
+│   │   │   │   ├── exceptions/          # GlobalExceptionHandler
+│   │   │   │   ├── models/              # User, UrlMapping, ClickEvent JPA entities
+│   │   │   │   ├── repository/          # Spring Data JPA repositories
+│   │   │   │   ├── security/            # WebSecurityConfig, WebConfig (CORS)
+│   │   │   │   │   └── jwt/             # JwtUtils, JwtAuthenticationFilter
+│   │   │   │   ├── service/             # UserService, UrlMappingService, UserDetails
+│   │   │   │   └── UrlShortnerSbApplication.java
 │   │   │   └── resources/
-│   │   └── test/
-│   ├── pom.xml
-│   └── Dockerfile
+│   │   │       └── application.properties # Server port 9090, DB & JWT configs
+│   │   └── test/                        # Backend unit & integration tests
+│   ├── Dockerfile                       # Multi-stage Java 21 build -> Java 23 JRE run
+│   ├── docker-compose.yaml              # Local MySQL 8.0 container + backend container
+│   ├── Shortify.postman_collection.json # Ready-to-import Postman test collection
+│   ├── pom.xml                          # Maven dependencies & build plugins
+│   ├── mvnw & mvnw.cmd                  # Maven wrappers
+│   └── README.md                        # Backend-specific instructions
 │
-├── frontend/
+├── Url-Shortner-Frontend/                # Frontend (React 18 + Vite 6 + Tailwind CSS)
 │   ├── src/
-│   ├── public/
-│   ├── package.json
-│   └── Dockerfile
+│   │   ├── apis/                        # Axios instance configuration
+│   │   ├── components/                  # Navbar, Footer, LandingPage, AboutPage, Login, Register
+│   │   │   └── Dashboard/               # DashboardLayout, Graph, ShortenItem, CreateNewShorten
+│   │   ├── contextApi/                  # React Context for JWT auth state
+│   │   ├── hooks/                       # Custom React Query hooks (useFetchMyShortUrls, etc.)
+│   │   ├── utils/                       # Constants, helper functions & subdomain handler
+│   │   ├── App.jsx                      # App root with toast and router
+│   │   ├── AppRouter.jsx                # Route definitions & subdomain switch
+│   │   ├── PrivateRoute.jsx             # Protected route guard
+│   │   └── main.jsx                     # Vite entry point
+│   ├── Dockerfile                       # Production container (build -> serve on 5173)
+│   ├── nonginx.Dockerfile               # Dev mode container
+│   ├── package.json                     # Frontend dependencies & scripts
+│   ├── tailwind.config.js               # Tailwind design tokens & themes
+│   └── vite.config.js                   # Vite configuration
 │
-├── docker-compose.yml
-└── README.md
+└── README.md                            # Main project documentation
 ```
 
 ---
@@ -213,14 +225,13 @@ UrlShortner/
 
 ### Prerequisites
 
-Make sure the following are installed:
+Make sure the following are installed on your machine:
 
-* **JDK 17 or newer**
-* **Node.js**
-* **npm**
-* **Maven**
-* **PostgreSQL or MySQL**
-* **Docker** *(optional for containerized setup)*
+* **JDK 21** (or JDK 17+)
+* **Node.js 18+** & **npm**
+* **Maven 3.8+** (or use the included `./mvnw` wrapper)
+* **Docker & Docker Compose** (optional for containerized setup)
+* **MySQL 8.0** or **PostgreSQL** database
 
 ---
 
@@ -228,7 +239,6 @@ Make sure the following are installed:
 
 ```bash
 git clone https://github.com/srisaisrinivashpanda/UrlShortner.git
-
 cd UrlShortner
 ```
 
@@ -236,95 +246,123 @@ cd UrlShortner
 
 ## 2. Database Configuration
 
-Create a PostgreSQL or MySQL database.
+You can use either **PostgreSQL** or **MySQL**.
 
-Configure the backend database connection in:
-
+Configure database credentials and connection parameters in:
 ```text
-backend/src/main/resources/application.properties
+Url-Shortner-sb/src/main/resources/application.properties
 ```
 
-Example PostgreSQL configuration:
-
+#### Option A: PostgreSQL (Default / Render Cloud / Local)
 ```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/urlshortener_db
+server.port=9090
+spring.datasource.url=jdbc:postgresql://localhost:5432/urlshortenerdb
 spring.datasource.username=your_username
 spring.datasource.password=your_password
-
+spring.datasource.driver-class-name=org.postgresql.Driver
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.hibernate.ddl-auto=update
 ```
 
-Do not commit real database credentials or secrets to GitHub.
+#### Option B: MySQL (Local / Docker)
+```properties
+server.port=9090
+spring.datasource.url=jdbc:mysql://localhost:3306/urlshortenerdb?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+spring.datasource.username=root
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.hibernate.ddl-auto=update
+```
+
+Configure your JWT secrets and CORS client URL:
+```properties
+jwt.secret=your_64_character_hex_or_base64_secret_key
+jwt.expiration=172800000
+frontend.url=http://localhost:5173
+```
 
 ---
 
 ## 3. Run the Backend
 
-Navigate to the backend:
+Navigate to the Spring Boot directory:
 
 ```bash
-cd backend
+cd Url-Shortner-sb
 ```
 
-Build the application:
-
+Build the project:
 ```bash
-mvn clean install
+./mvnw clean install
 ```
+*(On Windows Command Prompt, use `mvnw.cmd clean install`)*
 
-Run the application:
-
+Run the Spring Boot application:
 ```bash
-mvn spring-boot:run
+./mvnw spring-boot:run
 ```
 
-The backend will be available at:
-
-```text
-http://localhost:9090
-```
+The backend starts on port **9090**:
+* API Base URL: `http://localhost:9090`
+* Health Check: `http://localhost:9090/health`
+* Actuator: `http://localhost:9090/actuator/health`
 
 ---
 
 ## 4. Run the Frontend
 
-Open another terminal:
+Open a new terminal window:
 
 ```bash
-cd frontend
+cd Url-Shortner-Frontend
+```
+
+Create or verify `.env`:
+```env
+VITE_BACKEND_URL=http://localhost:9090
+VITE_REACT_FRONT_END_URL=http://localhost:5173
+VITE_REACT_SUBDOMAIN=http://url.localhost:5173
 ```
 
 Install dependencies:
-
 ```bash
 npm install
 ```
 
-Start the development server:
-
+Start the Vite development server:
 ```bash
 npm run dev
 ```
 
-The frontend will typically be available at:
-
+The frontend application will be running at:
 ```text
 http://localhost:5173
 ```
 
 ---
 
-## 5. Docker Setup
+## 5. Docker Setup (Local Full Stack)
 
-Build and start the application using Docker Compose:
+A pre-configured Docker Compose file is located inside `Url-Shortner-sb/` to spin up a MySQL 8.0 container and the backend:
 
 ```bash
-docker compose up --build
+cd Url-Shortner-sb
+docker compose up --build -d
 ```
 
-To stop the containers:
+* **MySQL Container**: Port `3307` on host (`mysql-db`)
+* **Backend Container**: Port `9090` on host (`shortify-backend-container`)
 
+To run the frontend in a container:
 ```bash
+cd ../Url-Shortner-Frontend
+docker build -t shortify-frontend .
+docker run -d -p 5173:5173 --name shortify-frontend-container shortify-frontend
+```
+
+To stop containers:
+```bash
+cd Url-Shortner-sb
 docker compose down
 ```
 
@@ -350,32 +388,42 @@ JWT_SECRET=your_secret_key
 
 ## API Overview
 
-The backend exposes RESTful APIs for authentication, URL management, and analytics.
+The backend exposes RESTful APIs for authentication, link management, redirection, analytics, and monitoring.
 
-Example endpoint structure:
+### 1. Public Authentication Endpoints
+No authentication required.
 
+| Method | Endpoint | Description | Request Body |
+|---|---|---|---|
+| `POST` | `/api/auth/public/register` | Register a new user | `{ "username": "...", "email": "...", "password": "..." }` |
+| `POST` | `/api/auth/public/login` | Authenticate user & receive JWT | `{ "username": "...", "password": "..." }` |
+
+### 2. URL Management & Analytics Endpoints
+Requires Header: `Authorization: Bearer <JWT_TOKEN>`.
+
+| Method | Endpoint | Description | Query / Body |
+|---|---|---|---|
+| `POST` | `/api/urls/shorten` | Generate unique 8-character short URL | Body: `{ "originalUrl": "https://..." }` |
+| `GET` | `/api/urls/myurls` | Fetch all shortened URLs for the logged-in user | None |
+| `PUT` | `/api/urls/{shortUrl}` | Update target original URL while retaining short code | Body: `{ "originalUrl": "https://..." }` |
+| `DELETE` | `/api/urls/{shortUrl}` | Delete shortened URL and cascade delete click events | Path: `shortUrl` code |
+| `GET` | `/api/urls/analytics/{shortUrl}` | Get click counts grouped by date for a specific link | Params: `startDate` (`ISO_LOCAL_DATE_TIME`), `endDate` |
+| `GET` | `/api/urls/totalClicks` | Get total daily click aggregate across all user links | Params: `startDate` (`ISO_LOCAL_DATE`), `endDate` |
+
+### 3. Redirection & Health
+Public endpoints.
+
+| Method | Endpoint | Description | Response |
+|---|---|---|---|
+| `GET` | `/{shortUrl}` | Redirects to original destination URL and logs click | `HTTP 302` Found (Location header) or `404` |
+| `GET` | `/health` | Application health check status | Returns `"OK"` |
+| `GET` | `/actuator/prometheus` | Prometheus formatted application metrics | Metric stream |
+
+### Postman Collection
+A pre-configured Postman test collection with sample requests and environments is provided at:
 ```text
-/api/auth/*
-/api/users/*
-/api/urls/*
-/api/analytics/*
+Url-Shortner-sb/Shortify.postman_collection.json
 ```
-
-### Example Operations
-
-```http
-POST   /api/auth/register
-POST   /api/auth/login
-
-POST   /api/urls
-GET    /api/urls
-GET    /api/urls/{id}
-DELETE /api/urls/{id}
-
-GET    /api/analytics/{id}
-```
-
-> Exact endpoints may vary depending on the current implementation.
 
 ---
 
@@ -479,18 +527,21 @@ Infrastructure automation can be managed using **Terraform and Ansible**, while 
 
 ---
 
-## Future Improvements
+## Project Status Matrix
 
-* [ ] Redis caching
-* [ ] Advanced click analytics
-* [ ] QR code generation
-* [ ] Custom domains
-* [ ] Link expiration automation
-* [ ] Distributed rate limiting
-* [ ] Message queue for asynchronous analytics
-* [ ] Automated CI/CD pipeline
-* [ ] Kubernetes production deployment
-* [ ] Enhanced observability
-* [ ] Comprehensive automated testing
-
----
+| Component / Feature | Status | Notes |
+|---|---|---|
+| **JWT Authentication & Registration** | **COMPLETE** | BCrypt password encryption, stateless JWT filter chain |
+| **URL Shortening & Collision Handling** | **COMPLETE** | 8-character alphanumeric random code with uniqueness validation |
+| **HTTP 302 Redirection & Click Logging** | **COMPLETE** | Fast redirection with timestamped `ClickEvent` generation |
+| **Interactive Analytics Dashboard** | **COMPLETE** | Chart.js bar graph for total clicks and link-level trends |
+| **Link Management (Edit & Delete)** | **COMPLETE** | In-place URL update, cascade deletion of click events |
+| **Responsive React SPA Frontend** | **COMPLETE** | React 18, Vite 6, Tailwind CSS, Material UI, Vanta effects |
+| **Docker & Docker Compose Setup** | **COMPLETE** | Multi-stage Dockerfiles + MySQL 8 / Spring Boot Compose |
+| **Actuator & Prometheus Metric Export** | **COMPLETE** | Micrometer Prometheus starter integrated |
+| **Postman API Collection** | **COMPLETE** | Included in repository (`Shortify.postman_collection.json`) |
+| **Redis Caching Layer** | **PLANNED** | High-speed cache for redirection lookups |
+| **Message Queue (RabbitMQ / Kafka)** | **PLANNED** | Asynchronous decoupling for high-throughput click event logging |
+| **Rate Limiting & Abuse Prevention** | **PLANNED** | IP-level and token-bucket request throttling |
+| **Kubernetes Helm Charts & Manifests** | **PLANNED** | Production cluster deployment configurations |
+| **Automated CI/CD Pipeline** | **PLANNED** | Jenkins / GitHub Actions build, test, and container push |

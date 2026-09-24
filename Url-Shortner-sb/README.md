@@ -1,9 +1,10 @@
-## Connect to MySQL container
-docker exec -it mysql-db bash
-mysql -u shortifyuser -p
+## Connect to PostgreSQL Container
+```bash
+docker exec -it postgres-db psql -U postgres -d urlshortenerdb
+```
 
-**NOTE:** Docker-compose and .env is used if you want to run a mysql container. Also, you have to change application.properties.
-**NOTE:** If you want to use Render hosted postgres, use only Dockerfile.
+**NOTE:** Docker Compose and `.env` spin up a local `postgres:16-alpine` container on port `5432` alongside the Spring Boot backend container.
+**NOTE:** To connect to cloud-hosted PostgreSQL (e.g. Render, Neon, Supabase), set `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, and `SPRING_DATASOURCE_PASSWORD` in your environment or `application.properties`.
 
 
 ## INSTALL Render CLI on Linux or WSL:
