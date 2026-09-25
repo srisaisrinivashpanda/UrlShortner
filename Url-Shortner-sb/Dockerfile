@@ -1,43 +1,40 @@
-# Use a Java 21 JDK image to build the Spring Boot app
-FROM eclipse-temurin:21-jdk AS build
-
-# Set the working directory
+# Stage 1: Build the Spring Boot application
+FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 
-# Copy Maven wrapper and POM to take advantage of caching
+# Copy Maven wrapper and POM to leverage layer caching
 COPY mvnw ./
 COPY .mvn/ .mvn/
 COPY pom.xml ./
 
-# Ensure the Maven wrapper is executable
-RUN chmod +x mvnw
+# Normalize line endings for Windows checkouts and make executable
+RUN sed -i 's/\r$//' mvnw && chmod +x mvnw
 
-# Download dependencies to cache them
-RUN ./mvnw dependency:go-offline
+# Resolve dependencies
+RUN ./mvnw dependency:resolve -B
 
-# Copy the source code and build the application
+# Copy application source and build package
 COPY src ./src
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -B
 
-# Use a Java 23 runtime image to run the application
-FROM eclipse-temurin:23-jre
-
-# Set the working directory
+# Stage 2: Minimal Java 21 runtime
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-# Copy the built JAR file from the build stage
-COPY --from=build /app/target/*.jar app.jar
+# Run as non-root user for security
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
-# Expose port 9090 for the Spring Boot application
+# Copy built JAR from build stage
+COPY --from=build /app/target/*.jar app.jar
+RUN chown -R appuser:appgroup /app
+
+USER appuser
+
+# Expose default port (overridable via PORT env variable)
 EXPOSE 9090
 
-# Specify the command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Container JVM optimization: respects cgroup limits in cloud platforms
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
 
-
-# Build the Docker image
-# docker build -t shortify-backend .
-
-# Run the container, mapping port 9090 on host to 9090 in container
-# docker run -d -p 9090:9090 --name shortify-backend-container shortify-backend
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 

@@ -1,7 +1,6 @@
-
-import { useQuery } from "react-query"
-import api from "../apis/api"
-
+import { useQuery } from "react-query";
+import api from "../apis/api";
+import dayjs from "dayjs";
 
 export const useFetchMyShortUrls = (token, onError) => {
     return useQuery("my-shortenurls",
@@ -19,7 +18,7 @@ export const useFetchMyShortUrls = (token, onError) => {
     },
           {
             select: (data) => {
-                const sortedData = data.data.sort(
+                const sortedData = (data?.data || []).sort(
                     (a, b) => new Date(b.createdDate) - new Date(a.createdDate)
                 );
                 return sortedData;
@@ -33,8 +32,10 @@ export const useFetchMyShortUrls = (token, onError) => {
 export const useFetchTotalClicks = (token, onError) => {
     return useQuery("url-totalclick",
          async () => {
+            const startDate = dayjs().subtract(1, "year").format("YYYY-MM-DD");
+            const endDate = dayjs().add(1, "day").format("YYYY-MM-DD");
             return await api.get(
-                "/api/urls/totalClicks?startDate=2024-01-01&endDate=2025-12-31",
+                `/api/urls/totalClicks?startDate=${startDate}&endDate=${endDate}`,
             {
                 headers: {
                     "Content-Type": "application/json",
@@ -46,25 +47,10 @@ export const useFetchTotalClicks = (token, onError) => {
     },
           {
             select: (data) => {
-                // data.data =>
-                    //  {
-                    //     "2024-01-01": 120,
-                    //     "2024-01-02": 95,
-                    //     "2024-01-03": 110,
-                    //   };
-                      
-                const convertToArray = Object.keys(data.data).map((key) => ({
+                const convertToArray = Object.keys(data?.data || {}).map((key) => ({
                     clickDate: key,
-                    count: data.data[key], // data.data[2024-01-01]
+                    count: data.data[key],
                 }));
-                // Object.keys(data.data) => ["2024-01-01", "2024-01-02", "2024-01-03"]
-
-                // FINAL:
-                //   [
-                //     { clickDate: "2024-01-01", count: 120 },
-                //     { clickDate: "2024-01-02", count: 95 },
-                //     { clickDate: "2024-01-03", count: 110 },
-                //   ]
                 return convertToArray;
             },
             onError,

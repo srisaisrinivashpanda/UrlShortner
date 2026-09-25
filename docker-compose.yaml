@@ -3,7 +3,7 @@ version: "3.9"
 services:
   postgres-db:
     image: postgres:16-alpine
-    container_name: postgres-db
+    container_name: shortify-postgres
     restart: always
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-urlshortenerdb}
@@ -19,9 +19,11 @@ services:
       timeout: 5s
       retries: 5
 
-  shortify-backend:
-    build: .
-    container_name: shortify-backend-container
+  backend:
+    build:
+      context: ./Url-Shortner-sb
+      dockerfile: Dockerfile
+    container_name: shortify-backend
     restart: always
     ports:
       - "9090:9090"
@@ -29,13 +31,28 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${POSTGRES_DB:-urlshortenerdb}
       SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-postgres}
       SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173,http://localhost:80}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:80,http://localhost:5173,http://localhost:3000}
       PORT: 9090
       JWT_SECRET: ${JWT_SECRET:-9632e8e84e2e58714f873ed2189c287848f40d254230e50d8c94d1269db072ff2f007fe86e2e12b67fadaa0db0370346def1b18790ee0e8d1ca599534660e13b}
       JWT_EXPIRATION: ${JWT_EXPIRATION:-172800000}
     depends_on:
       postgres-db:
         condition: service_healthy
+
+  frontend:
+    build:
+      context: ./Url-Shortner-Frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_BACKEND_URL: ${VITE_BACKEND_URL:-http://localhost:9090}
+        VITE_REACT_FRONT_END_URL: ${VITE_REACT_FRONT_END_URL:-http://localhost:80}
+        VITE_REACT_SUBDOMAIN: ${VITE_REACT_SUBDOMAIN:-http://localhost:80}
+    container_name: shortify-frontend
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
 
 volumes:
   postgres_data:

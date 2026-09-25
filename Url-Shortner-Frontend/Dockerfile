@@ -1,17 +1,38 @@
-FROM node:18-alpine
+# Stage 1: Build the React application with Vite
+FROM node:20-alpine AS build
 WORKDIR /app
 
+# Accept Vite build-time environment arguments
+ARG VITE_BACKEND_URL
+ARG VITE_REACT_FRONT_END_URL
+ARG VITE_REACT_SUBDOMAIN
+
+# Pass them to environment so Vite can bake them into dist
+ENV VITE_BACKEND_URL=$VITE_BACKEND_URL
+ENV VITE_REACT_FRONT_END_URL=$VITE_REACT_FRONT_END_URL
+ENV VITE_REACT_SUBDOMAIN=$VITE_REACT_SUBDOMAIN
+
+# Cache dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci || npm install
+
+# Copy source and build production bundle
 COPY . .
 RUN npm run build
-RUN npm install -g serve
 
-EXPOSE 5173
-CMD ["serve", "-s", "dist", "-l", "5173"]
+# Stage 2: Serve statically with lightweight Nginx
+FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-# Build image
-# docker build -t shortify-frontend .
+# Clean default static assets
+RUN rm -rf ./*
 
-# Run container (map 5173 inside container -> 5173 on host)
-# docker run -it -p 5173:5173 --name shortify-frontend-container shortify-frontend
+# Copy built distribution
+COPY --from=build /app/dist .
+
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

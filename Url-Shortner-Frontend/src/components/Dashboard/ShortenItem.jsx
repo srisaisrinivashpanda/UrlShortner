@@ -38,10 +38,10 @@ const ShortenItem = ({
   const [newOriginalUrl, setNewOriginalUrl] = useState(originalUrl);
   const [updating, setUpdating] = useState(false);
 
-  const subDomain = import.meta.env.VITE_REACT_FRONT_END_URL.replace(
-    /^https?:\/\//,
-    ""
-  );
+  const frontEndUrl = (
+    import.meta.env.VITE_REACT_FRONT_END_URL || window.location.origin
+  ).replace(/\/+$/, "");
+  const subDomain = frontEndUrl.replace(/^https?:\/\//, "");
 
   const analyticsHandler = (shortUrl) => {
     if (!analyticToggle) {
@@ -53,8 +53,10 @@ const ShortenItem = ({
   const fetchMyShortUrl = async () => {
     setLoader(true);
     try {
+      const startDate = dayjs().subtract(1, "year").startOf("day").format("YYYY-MM-DDTHH:mm:ss");
+      const endDate = dayjs().add(1, "day").endOf("day").format("YYYY-MM-DDTHH:mm:ss");
       const { data } = await api.get(
-        `/api/urls/analytics/${selectedUrl}?startDate=2024-12-01T00:00:00&endDate=2025-12-31T23:59:59`,
+        `/api/urls/analytics/${selectedUrl}?startDate=${startDate}&endDate=${endDate}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -146,9 +148,7 @@ const ShortenItem = ({
             <Link
               target="_"
               className="text-[17px]  font-montserrat font-[600] text-linkColor"
-              to={
-                import.meta.env.VITE_REACT_FRONT_END_URL + "/s/" + `${shortUrl}`
-              }
+              to={`${frontEndUrl}/s/${shortUrl}`}
             >
               {subDomain + "/s/" + `${shortUrl}`}
             </Link>
@@ -208,9 +208,7 @@ const ShortenItem = ({
           {/* Copy Button */}
           <CopyToClipboard
             onCopy={() => setIsCopied(true)}
-            text={`${
-              import.meta.env.VITE_REACT_FRONT_END_URL + "/s/" + `${shortUrl}`
-            }`}
+            text={`${frontEndUrl}/s/${shortUrl}`}
           >
             <div className="flex cursor-pointer gap-1 items-center bg-btnColor py-2  font-semibold shadow-md shadow-slate-500 px-6 rounded-md text-white ">
               <button className="">{isCopied ? "Copied" : "Copy"}</button>

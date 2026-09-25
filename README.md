@@ -343,28 +343,100 @@ http://localhost:5173
 
 ## 5. Docker Setup (Local Full Stack)
 
-A pre-configured Docker Compose file is located inside `Url-Shortner-sb/` to spin up a MySQL 8.0 container and the backend:
+You can launch the entire stack (PostgreSQL 16 + Spring Boot Backend + React/Nginx Frontend) with a single command from the project root:
 
 ```bash
-cd Url-Shortner-sb
 docker compose up --build -d
 ```
 
-* **MySQL Container**: Port `3307` on host (`mysql-db`)
-* **Backend Container**: Port `9090` on host (`shortify-backend-container`)
+Services exposed:
+* **Frontend SPA**: `http://localhost` (Port 80)
+* **Backend REST API**: `http://localhost:9090`
+* **PostgreSQL Database**: `localhost:5432`
 
-To run the frontend in a container:
+To stop all services:
 ```bash
-cd ../Url-Shortner-Frontend
-docker build -t shortify-frontend .
-docker run -d -p 5173:5173 --name shortify-frontend-container shortify-frontend
-```
-
-To stop containers:
-```bash
-cd Url-Shortner-sb
 docker compose down
 ```
+
+---
+
+## 6. Production Deployment Guide
+
+This project is configured and validated for modern cloud deployment.
+
+### Strategy 1: One-Click Render Blueprint (Recommended)
+This repository includes a [`render.yaml`](./render.yaml) file configuring:
+1. **Managed PostgreSQL Database** (`shortify-db`)
+2. **Spring Boot Backend Web Service** (`shortify-backend`) with health checks on `/health` and JVM container optimization
+3. **React Static Site** (`shortify-frontend`) with SPA rewrites
+
+**Steps:**
+1. Push your repository to GitHub.
+2. Log in to [Render](https://render.com) and go to **Blueprints**.
+3. Click **New Blueprint Instance** and select your GitHub repository.
+4. Render will read `render.yaml` and provision all 3 services automatically with secure environment variable linking.
+
+---
+
+### Strategy 2: Hybrid Cloud (Render Backend + Vercel / Netlify Frontend)
+
+#### Step 1: Deploy Database (PostgreSQL)
+1. Create a free PostgreSQL instance on [Render](https://render.com), [Neon](https://neon.tech), or [Supabase](https://supabase.com).
+2. Copy the JDBC connection URL or parameters:
+   - Host, Database Name, Username, Password, Port (5432).
+
+#### Step 2: Deploy Spring Boot Backend (Render / Railway)
+1. In Render, select **New > Web Service** and connect your GitHub repo.
+2. **Root Directory**: `Url-Shortner-sb`
+3. **Runtime**: `Docker` (uses [`Url-Shortner-sb/Dockerfile`](./Url-Shortner-sb/Dockerfile))
+4. **Environment Variables**:
+   * `PORT`: `9090` (Render will route public traffic to this port)
+   * `SPRING_DATASOURCE_URL`: `jdbc:postgresql://<host>:5432/<dbname>?sslmode=require`
+   * `SPRING_DATASOURCE_USERNAME`: `<db_username>`
+   * `SPRING_DATASOURCE_PASSWORD`: `<db_password>`
+   * `JWT_SECRET`: Generate a secure 64-character random string
+   * `JWT_EXPIRATION`: `172800000` (48 hours)
+   * `FRONTEND_URL`: `https://your-frontend.vercel.app` (supports comma-separated origins)
+5. **Health Check Path**: `/health`
+6. Deploy the web service and copy the backend URL (e.g. `https://shortify-api.onrender.com`).
+
+#### Step 3: Deploy React Frontend (Vercel / Netlify)
+1. Go to [Vercel](https://vercel.com) or [Netlify](https://netlify.com) and import the repository.
+2. **Root Directory**: `Url-Shortner-Frontend`
+3. **Framework Preset**: `Vite`
+4. **Build Command**: `npm run build`
+5. **Output Directory**: `dist`
+6. **Environment Variables**:
+   * `VITE_BACKEND_URL`: `https://shortify-api.onrender.com` (your backend URL from Step 2)
+   * `VITE_REACT_FRONT_END_URL`: `https://your-frontend.vercel.app` (your frontend public domain)
+   * `VITE_REACT_SUBDOMAIN`: `https://your-frontend.vercel.app`
+7. Click **Deploy**.
+   *(Note: SPA routing is pre-configured via `vercel.json` for Vercel and `public/_redirects` for Netlify)*
+
+---
+
+### Strategy 3: Self-Hosted VPS / Cloud Server (Docker & Nginx)
+1. SSH into your VPS (Ubuntu/Debian, EC2, DigitalOcean Droplet, Linode).
+2. Install Docker & Docker Compose:
+   ```bash
+   sudo apt update && sudo apt install docker.io docker-compose-v2 -y
+   ```
+3. Clone repository and set up environment:
+   ```bash
+   git clone https://github.com/srisaisrinivashpanda/UrlShortner.git
+   cd UrlShortner
+   ```
+4. Configure production environment variables in `.env` or in `docker-compose.yaml`:
+   ```bash
+   cp Url-Shortner-sb/.env.example Url-Shortner-sb/.env
+   cp Url-Shortner-Frontend/.env.example Url-Shortner-Frontend/.env
+   ```
+5. Launch the containers in detached mode:
+   ```bash
+   docker compose up -d --build
+   ```
+6. (Optional) Point your domain's DNS `A` records to your VPS IP and set up Certbot SSL with Let's Encrypt.
 
 ---
 
@@ -544,4 +616,4 @@ Infrastructure automation can be managed using **Terraform and Ansible**, while 
 | **Message Queue (RabbitMQ / Kafka)** | **PLANNED** | Asynchronous decoupling for high-throughput click event logging |
 | **Rate Limiting & Abuse Prevention** | **PLANNED** | IP-level and token-bucket request throttling |
 | **Kubernetes Helm Charts & Manifests** | **PLANNED** | Production cluster deployment configurations |
-| **Automated CI/CD Pipeline** | **PLANNED** | Jenkins / GitHub Actions build, test, and container push |
+| **Automated CI/CD Pipeline** | **COMPLETE** | GitHub Actions build, test, and container packaging workflow |
